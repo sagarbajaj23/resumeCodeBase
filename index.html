@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <!-- Previous head content remains the same -->
+    <style>
+        /* Add to your existing CSS */
+        .oauth-buttons {
+            display: flex;
+            gap: 1rem;
+            margin: 1.5rem 0;
+            justify-content: center;
+        }
+        .oauth-btn {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            border-radius: var(--radius);
+            background: white;
+            color: var(--text);
+            text-decoration: none;
+            border: 1px solid #ddd;
+        }
+        .oauth-btn.google { border-color: #DB4437; }
+        .oauth-btn.linkedin { border-color: #0077B5; }
+        .oauth-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-sm);
+        }
+    </style>
+</head>
+<body>
+    <!-- Previous header remains the same -->
+
+    <!-- Updated Login Form -->
+    <div class="login-form">
+        <h2>Login to your account</h2>
+        <form id="loginForm">
+            <div class="form-group">
+                <label for="email">Email</label>
+                <input type="email" id="email" placeholder="Enter your email" required>
+            </div>
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input type="password" id="password" placeholder="Enter your password" required>
+            </div>
+            <button type="submit" class="btn">Login</button>
+        </form>
+
+        <div class="oauth-buttons">
+            <a href="/api/auth/google" class="oauth-btn google">
+                <i class="fab fa-google"></i> Google
+            </a>
+            <a href="/api/auth/linkedin" class="oauth-btn linkedin">
+                <i class="fab fa-linkedin"></i> LinkedIn
+            </a>
+        </div>
+
+        <p style="margin-top: 1.5rem; text-align: center;">
+            Don't have an account? <a href="#" id="toggleSignup">Sign up</a>
+        </p>
+    </div>
+
+    <!-- Signup Form (Hidden by default) -->
+    <div class="login-form" id="signupForm" style="display: none;">
+        <h2>Create your account</h2>
+        <form id="registerForm">
+            <div class="form-group">
+                <label for="signupEmail">Email</label>
+                <input type="email" id="signupEmail" placeholder="Enter your email" required>
+            </div>
+            <div class="form-group">
+                <label for="signupPassword">Password</label>
+                <input type="password" id="signupPassword" placeholder="Create a password" required>
+            </div>
+            <button type="submit" class="btn">Sign Up</button>
+        </form>
+
+        <div class="oauth-buttons">
+            <a href="/api/auth/google" class="oauth-btn google">
+                <i class="fab fa-google"></i> Google
+            </a>
+            <a href="/api/auth/linkedin" class="oauth-btn linkedin">
+                <i class="fab fa-linkedin"></i> LinkedIn
+            </a>
+        </div>
+
+        <p style="margin-top: 1.5rem; text-align: center;">
+            Already have an account? <a href="#" id="toggleLogin">Login</a>
+        </p>
+    </div>
+
+    <script>
+        // Toggle between login/signup forms
+        document.getElementById('toggleSignup').addEventListener('click', (e) => {
+            e.preventDefault();
+            document.getElementById('loginForm').style.display = 'none';
+            document.getElementById('signupForm').style.display = 'block';
+        });
+        
+        document.getElementById('toggleLogin').addEventListener('click', (e) => {
+            e.preventDefault();
+            document.getElementById('signupForm').style.display = 'none';
+            document.getElementById('loginForm').style.display = 'block';
+        });
+
+        // Handle login
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            try {
+                const response = await fetch('/api/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        email: document.getElementById('email').value,
+                        password: document.getElementById('password').value
+                    })
+                });
+                const data = await response.json();
+                if (response.ok) {
+                    localStorage.setItem('token', data.token);
+                    window.location.href = '/dashboard.html';
+                } else {
+                    alert(data.error || 'Login failed');
+                }
+            } catch (error) {
+                alert('An error occurred');
+            }
+        });
+
+        // Handle signup
+        document.getElementById('registerForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            try {
+                const response = await fetch('/api/signup', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        email: document.getElementById('signupEmail').value,
+                        password: document.getElementById('signupPassword').value
+                    })
+                });
+                const data = await response.json();
+                if (response.ok) {
+                    localStorage.setItem('token', data.token);
+                    window.location.href = '/dashboard.html';
+                } else {
+                    alert(data.error || 'Signup failed');
+                }
+            } catch (error) {
+                alert('An error occurred');
+            }
+        });
+    </script>
+</body>
+</html>
