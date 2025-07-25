@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <!-- Similar head content as dashboard.html -->
+    <style>
+        /* Add builder-specific styles */
+        .builder-container {
+            display: flex;
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+        
+        .form-section, .preview-section {
+            flex: 1;
+            background: white;
+            padding: 1.5rem;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow-sm);
+        }
+        
+        textarea {
+            width: 100%;
+            min-height: 200px;
+            padding: 0.8rem;
+            border: 1px solid #ddd;
+            border-radius: var(--radius);
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container header-content">
+            <a href="/dashboard.html" class="logo">
+                <i class="fas fa-arrow-left"></i> Back to Dashboard
+            </a>
+            <div>
+                <button id="saveBtn" class="btn">Save Resume</button>
+            </div>
+        </div>
+    </header>
+
+    <main class="container">
+        <h1>Resume Builder</h1>
+        
+        <div class="builder-container">
+            <div class="form-section">
+                <h2>Edit Your Resume</h2>
+                <form id="resumeForm">
+                    <div class="form-group">
+                        <label for="resumeTitle">Title</label>
+                        <input type="text" id="resumeTitle" placeholder="My Professional Resume">
+                    </div>
+                    <div class="form-group">
+                        <label for="resumeContent">Content (JSON)</label>
+                        <textarea id="resumeContent" placeholder="Paste your resume JSON here"></textarea>
+                    </div>
+                </form>
+            </div>
+            
+            <div class="preview-section">
+                <h2>Preview</h2>
+                <div id="resumePreview">
+                    <!-- Preview will be rendered here -->
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                window.location.href = '/';
+                return;
+            }
+
+            // Load existing resume if ID is in URL
+            const urlParams = new URLSearchParams(window.location.search);
+            const resumeId = urlParams.get('resumeId');
+            
+            if (resumeId) {
+                try {
+                    const response = await fetch(`/api/resumes/${resumeId}`, {
+                        headers: {
+                            'Authorization': `Bearer ${token}`
+                        }
+                    });
+                    
+                    if (response.ok) {
+                        const resume = await response.json();
+                        document.getElementById('resumeTitle').value = resume.title;
+                        document.getElementById('resumeContent').value = JSON.stringify(resume.content, null, 2);
+                        renderPreview(resume.content);
+                    }
+                } catch (error) {
+                    console.error('Failed to load resume', error);
+                }
+            }
+
+            // Save button
+            document.getElementById('saveBtn').addEventListener('click', async () => {
+                try {
+                    const resumeData = {
+                        title: document.getElementById('resumeTitle').value,
+                        content: JSON.parse(document.getElementById('resumeContent').value)
+                    };
+                    
+                    const response = await fetch('/api/resumes', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${token}`
+                        },
+                        body: JSON.stringify(resumeData)
+                    });
+                    
+                    if (response.ok) {
+                        alert('Resume saved successfully!');
+                        window.location.href = '/dashboard.html';
+                    } else {
+                        throw new Error('Failed to save resume');
+                    }
+                } catch (error) {
+                    console.error(error);
+                    alert('Error saving resume: ' + error.message);
+                }
+            });
+
+            // Live preview update
+            document.getElementById('resumeContent').addEventListener('input', () => {
+                try {
+                    const content = JSON.parse(document.getElementById('resumeContent').value);
+                    renderPreview(content);
+                } catch (e) {
+                    // Invalid JSON
+                }
+            });
+        });
+
+        function renderPreview(data) {
+            // Implement your resume preview rendering logic here
+            const preview = document.getElementById('resumePreview');
+            preview.innerHTML = '<h3>' + (data.name || 'Your Name') + '</h3>';
+            // Add more preview rendering as needed
+        }
+    </script>
+</body>
+</html>
